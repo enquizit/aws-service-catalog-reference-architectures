@@ -9,10 +9,16 @@ phases:
             - echo "S3 Upload Beginning"
             - python -V
             - export ACCID=$(aws sts get-caller-identity --query 'Account' | tr -d '"')
+            - #FIXME bucket name is hardcoded, query stack outputs
+            - #FIXME using S3 as a template source is insane, use deterministic CodeCommit reference
             - aws s3 sync . s3://servicecatalog-deployedtemplates-$ACCID/ --delete --exclude "*" --include "*.json" --include "*.yml"
             - echo "S3 Upload Complete, updating cloudformation now..."
             - /bin/bash codepipeline/run-pipelineupdate.sh
+            - #FIXME bucket name is hardcoded, query stack outputs
+            - #FIXME using S3 as a template source is insane, use deterministic CodeCommit reference
             - aws cloudformation update-stack-set --stack-set-name SC-IAC-automated-IAMroles  --parameters "[{\"ParameterKey\":\"RepoRootURL\",\"ParameterValue\":\"https://servicecatalog-deployedtemplates-$ACCID.s3.amazonaws.com/\"}]" --template-url "https://servicecatalog-deployedtemplates-$ACCID.s3.amazonaws.com/iam/sc-demosetup-iam.json" --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND
+            - #FIXME bucket name is hardcoded, query stack outputs
+            - #FIXME using S3 as a template source is insane, use deterministic CodeCommit reference
             - aws cloudformation update-stack-set --stack-set-name SC-IAC-automated-portfolio --parameters "[{\"ParameterKey\":\"LinkedRole2\",\"UsePreviousValue\":true},{\"ParameterKey\":\"LinkedRole1\",\"UsePreviousValue\":true},{\"ParameterKey\":\"LaunchRoleName\",\"UsePreviousValue\":true},{\"ParameterKey\":\"RepoRootURL\",\"ParameterValue\":\"https://servicecatalog-deployedtemplates-$ACCID.s3.amazonaws.com/\"}]" --template-url "https://servicecatalog-deployedtemplates-$ACCID.s3.amazonaws.com/ec2/sc-portfolio-ec2VPC.json"
     post_build:
         commands:
